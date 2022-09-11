@@ -1,0 +1,206 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Legitimoose <legitimoose@gmail.com>
+Date: Sun, 11 Sep 2022 12:28:26 -0700
+Subject: [PATCH] add food properties and getFoodProperties
+
+
+diff --git a/src/main/java/io/papermc/paper/world/FoodProperties.java b/src/main/java/io/papermc/paper/world/FoodProperties.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6147c0061046d7d08fc685ca758db7983bd20dd0
+--- /dev/null
++++ b/src/main/java/io/papermc/paper/world/FoodProperties.java
+@@ -0,0 +1,73 @@
++package io.papermc.paper.world;
++
++public class FoodProperties {
++    private final int nutrition;
++    private final float saturationModifier;
++    private final boolean isMeat;
++    private final boolean canAlwaysEat;
++    private final boolean fastFood;
++    FoodProperties(int hunger, float saturationModifier, boolean meat, boolean alwaysEat, boolean eatFast) {
++        this.nutrition = hunger;
++        this.saturationModifier = saturationModifier;
++        this.isMeat = meat;
++        this.canAlwaysEat = alwaysEat;
++        this.fastFood = eatFast;
++    }
++
++    public int getNutrition() {
++        return this.nutrition;
++    }
++
++    public float getSaturationModifier() {
++        return this.saturationModifier;
++    }
++
++    public boolean isMeat() {
++        return this.isMeat;
++    }
++
++    public boolean canAlwaysEat() {
++        return this.canAlwaysEat;
++    }
++
++    public boolean isFastFood() {
++        return this.fastFood;
++    }
++
++    public static class Builder {
++        private int nutrition;
++        private float saturationModifier;
++        private boolean isMeat;
++        private boolean canAlwaysEat;
++        private boolean eatFast;
++
++        public FoodProperties.Builder nutrition(int hunger) {
++            this.nutrition = hunger;
++            return this;
++        }
++
++        public FoodProperties.Builder saturationMod(float saturationModifier) {
++            this.saturationModifier = saturationModifier;
++            return this;
++        }
++
++        public FoodProperties.Builder meat() {
++            this.isMeat = true;
++            return this;
++        }
++
++        public FoodProperties.Builder alwaysEat() {
++            this.canAlwaysEat = true;
++            return this;
++        }
++
++        public FoodProperties.Builder fast() {
++            this.eatFast = true;
++            return this;
++        }
++
++        public FoodProperties build() {
++            return new FoodProperties(this.nutrition, this.saturationModifier, this.isMeat, this.canAlwaysEat, this.eatFast);
++        }
++    }
++}
+diff --git a/src/main/java/org/bukkit/Material.java b/src/main/java/org/bukkit/Material.java
+index 1d6baee05643607baa40a07022576906ea61a92f..ac8de43716541a209c29561269bea27fd5a7ebff 100644
+--- a/src/main/java/org/bukkit/Material.java
++++ b/src/main/java/org/bukkit/Material.java
+@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
+ import java.util.Locale;
+ import java.util.Map;
+ import java.util.function.Consumer;
++import io.papermc.paper.world.FoodProperties;
+ import org.bukkit.attribute.Attribute;
+ import org.bukkit.attribute.AttributeModifier;
+ import org.bukkit.block.data.Ageable;
+@@ -5347,6 +5348,108 @@ public enum Material implements Keyed, net.kyori.adventure.translation.Translata
+         }
+     }
+ 
++    // PAPER START
++    /**
++     * Get the properties of this Material if it is food.
++     * <br>
++     * Only available when {@link #isEdible()} is true.
++     *
++     * @return The FoodProperties of the material.
++     */
++    @Nullable
++    public FoodProperties getFoodProperties() {
++        Preconditions.checkArgument(isEdible(), "The Material is not a food!");
++
++        switch (this)
++        {
++            //<editor-fold defaultstate="collapsed" desc="FoodProperties">
++            case APPLE:
++                return new FoodProperties.Builder().nutrition(4).saturationMod(0.3F).build();
++            case BAKED_POTATO:
++                new FoodProperties.Builder().nutrition(5).saturationMod(0.6F).build();
++            case BEEF:
++                new FoodProperties.Builder().nutrition(3).saturationMod(0.3F).meat().build();
++            case BEETROOT:
++                return new FoodProperties.Builder().nutrition(1).saturationMod(0.6F).build();
++            case BEETROOT_SOUP:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.6F).build();
++            case BREAD:
++                return new FoodProperties.Builder().nutrition(5).saturationMod(0.6F).build();
++            case CARROT:
++                return new FoodProperties.Builder().nutrition(3).saturationMod(0.6F).build();
++            case CHICKEN:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.3F).build();//.effect(new PotionEffect(PotionEffectType.HUNGER, 600, 0), 0.3F).meat().build();
++            case CHORUS_FRUIT:
++                return new FoodProperties.Builder().nutrition(4).saturationMod(0.3F).alwaysEat().build();
++            case COD:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.1F).build();
++            case COOKED_BEEF:
++                return new FoodProperties.Builder().nutrition(8).saturationMod(0.8F).meat().build();
++            case COOKED_CHICKEN:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.6F).meat().build();
++            case COOKED_COD:
++                return new FoodProperties.Builder().nutrition(5).saturationMod(0.6F).build();
++            case COOKED_MUTTON:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.8F).meat().build();
++            case COOKED_PORKCHOP:
++                return new FoodProperties.Builder().nutrition(8).saturationMod(0.8F).meat().build();
++            case COOKED_RABBIT:
++                return new FoodProperties.Builder().nutrition(5).saturationMod(0.6F).meat().build();
++            case COOKED_SALMON:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.8F).build();
++            case COOKIE:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.1F).build();
++            case DRIED_KELP:
++                return new FoodProperties.Builder().nutrition(1).saturationMod(0.3F).fast().build();
++            case ENCHANTED_GOLDEN_APPLE:
++                return new FoodProperties.Builder().nutrition(4).saturationMod(1.2F).alwaysEat().build();
++            case GOLDEN_APPLE:
++                return new FoodProperties.Builder().nutrition(4).saturationMod(1.2F).alwaysEat().build();
++            case GOLDEN_CARROT:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(1.2F).build();
++            case HONEY_BOTTLE:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.1F).build();
++            case MELON_SLICE:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.3F).build();
++            case MUSHROOM_STEW:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.6F).build();
++            case MUTTON:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.3F).meat().build();
++            case POISONOUS_POTATO:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.3F).build();
++            case PORKCHOP:
++                return new FoodProperties.Builder().nutrition(3).saturationMod(0.3F).meat().build();
++            case POTATO:
++                return new FoodProperties.Builder().nutrition(1).saturationMod(0.3F).build();
++            case PUFFERFISH:
++                return new FoodProperties.Builder().nutrition(1).saturationMod(0.1F).build();
++            case PUMPKIN_PIE:
++                return new FoodProperties.Builder().nutrition(8).saturationMod(0.3F).build();
++            case RABBIT:
++                return new FoodProperties.Builder().nutrition(3).saturationMod(0.3F).meat().build();
++            case RABBIT_STEW:
++                return new FoodProperties.Builder().nutrition(10).saturationMod(0.6F).build();
++            case ROTTEN_FLESH:
++                return new FoodProperties.Builder().nutrition(4).saturationMod(0.1F).meat().build();
++            case SALMON:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.1F).build();
++            case SPIDER_EYE:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.8F).build();
++            case SUSPICIOUS_STEW:
++                return new FoodProperties.Builder().nutrition(6).saturationMod(0.6F).build();
++            case SWEET_BERRIES:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.1F).build();
++            case GLOW_BERRIES:
++                return new FoodProperties.Builder().nutrition(2).saturationMod(0.1F).build();
++            case TROPICAL_FISH:
++                return new FoodProperties.Builder().nutrition(1).saturationMod(0.1F).build();
++            default:
++                return null;
++                //</editor-fold>
++        }
++    }
++    // PAPER END
++
+     /**
+      * Attempts to get the Material with the given name.
+      * <p>
